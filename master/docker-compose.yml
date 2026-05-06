@@ -23,7 +23,6 @@ x-airflow-common: &airflow-common
   volumes:
     # Ruta ABSOLUTA de tu EC2 : Ruta interna del contenedor
     # MAPEO DE VOLÚMENES: Izquierda es la máquina Host (EC2), Derecha es el contenedor interno.
-    # Como vas a clonar el repo de DAGs en /opt/data-cluster/dags_repo, salimos de master (..) y apuntamos allá.
     # Ruta EC2 : Ruta Contenedor : Permiso (ro = read-only)
     - /opt/dags-alzheimer/dags:/opt/airflow/dags:ro
     - ./logs:/opt/airflow/logs
@@ -38,8 +37,14 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: airflow-init
-    entrypoint: /bin/bash
+    entrypoint: /bin/bash # ignora entrypoint de airflow por defecto temporalmente para crear las carpetas
+    # abre una terminal bash
     user: "0:0" # Ejecuta como root temporalmente para crear carpetas
+    environment:
+      - _AIRFLOW_DB_MIGRATE=true # Gana y sobrescribe el "false" del .env
+      # si esto estuviera en false no se crearia la base de datos y no podria usar airflow
+      # porque airflow necesita una base de datos para almacenar los metadatos de los dags
+      # los usuarios, las conexiones, variables, etc.
     command:
       - -c
       - |
@@ -48,6 +53,8 @@ services:
         # Les da propiedad al usuario 50000
         chown -R "${AIRFLOW_UID}:0" /opt/airflow
         # Comando mágico: Migra la base de datos a la versión 3.2.0
+        # Ahora si ejecuta el scrip de migracion de la base de datos a la version 3.2.0 de airflow
+        # y crea el usuario administrador con la contraseña que esta en el archivo .env
         exec /entrypoint airflow db migrate
 
   # ==============================================================================
