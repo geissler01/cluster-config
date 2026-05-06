@@ -1,0 +1,78 @@
+services:
+  # ---------------------------------------------------------
+  # SERVICIO 1: El Motor de Base de Datos (PostgreSQL)
+  # ---------------------------------------------------------
+  postgres:
+    # Usamos la versión 15. La etiqueta 'alpine' significa que usa un sistema 
+    # operativo ultra-reducido (pesa unos 15MB). Es más rápido de descargar y 
+    # mucho más seguro porque no tiene herramientas extra que un hacker pueda usar.
+    image: postgres:15-alpine
+
+    # Nombre amigable para no ver IDs raros cuando hagamos 'docker ps'
+    container_name: core-database
+
+    # Tolerancia a fallos: Si el contenedor se cae por un pico de memoria, 
+    # o si reinicias la instancia EC2, Docker lo volverá a levantar automáticamente.
+    restart: always
+
+    # MEMORIA COMPARTIDA (Shared Memory)
+    # Fundamental para Analítica de Datos. Por defecto Docker le da 64MB a Postgres.
+    # Cuando Airflow lance cientos de consultas, 64MB se ahogarán. Le damos 256MB 
+    # para que tenga una pista de aterrizaje amplia para mover datos en RAM.
+    shm_size: 256mb
+
+    # VARIABLES DE ENTORNO
+    # Aquí pasamos las credenciales. Estas variables (con $) indican que 
+    # Docker debe ir a leer el archivo .env que está en la misma carpeta.
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${TZ} # Zona horaria para que los logs coincidan con tu país
+
+    # PUERTOS (Izquierda:Host AWS -> Derecha:Contenedor)
+    # Postgres internamente siempre vive en el puerto 5432.
+    # Al exponerlo al 5432 del Host (tu instancia DB), permitimos que el 
+    # Master y los Workers se conecten a esta máquina por su IP privada.
+    ports:
+      - "5432:5432"
+
+    # VOLÚMENES (La Persistencia / "El Tubo Mágico")
+    # Derecha: La ruta exacta donde Postgres guarda los bits de las tablas por dentro.
+    # alzheimer_db_vol es un volumen administrado por docker
+    # y se guarda en la ruta /var/lib/docker/volumes/alzheimer_db_vol/_data
+    # Si se corre el comando docker compose down -v, el volumen se borrará y se pierde la DB
+    volumes:
+      - alzheimer_db_vol:/var/lib/postgresql/data
+
+    # HEALTHCHECK (Chequeo de salud)
+    # Un contenedor "corriendo" no significa que esté "listo para recibir conexiones".
+    # Cada 10 segundos, Docker ejecutará el comando 'pg_isready'.
+    # Si responde bien, Docker marcará el contenedor como "healthy" (sano).
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------
+  # SERVICIO 2: Interfaz Visual (Adminer)
+  # ---------------------------------------------------------
+  adminer:
+    # Adminer es como un dBeaver o pgAdmin, pero en formato web ultra ligero.
+    image: adminer:latest
+    container_name: db-admin-ui
+    restart: always
+
+    # Podrás acceder poniendo en tu navegador: IP_PRIVADA_DB:8080 (o configurarlo en NPM)
+    ports:
+      - "8080:8080"
+
+    # DEPENDENCIA
+    # Le dice a Docker: "No intentes arrancar la interfaz web hasta que 
+    # el servicio 'postgres' de arriba no esté encendido".
+    depends_on:
+      - postgres
+# Y lo declaras al final porque es un volumen administrado por docker
+volumes:
+  alzheimer_db_vol:
