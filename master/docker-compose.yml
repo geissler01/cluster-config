@@ -51,31 +51,15 @@ services:
         exec /entrypoint airflow db migrate
 
   # ==============================================================================
-  # 2. AIRFLOW-WEBSERVER (La Interfaz Visual)
-  # Este es el que escuchará el Nginx Proxy a través del puerto 8080.
-  # ==============================================================================
-  airflow-webserver:
-    <<: *airflow-common
-    container_name: airflow-webserver
-    command: webserver
-    ports:
-      - "8080:8080"
-    restart: always # Si el nodo se reinicia, este contenedor revive solo
-    depends_on:
-      airflow-init:
-        # No arranca hasta que 'airflow-init' haya creado las tablas con éxito
-        condition: service_completed_successfully
-
-  # ==============================================================================
-  # 3. AIRFLOW-APISERVER (El Nuevo Backend de Airflow 3)
-  # Recibe los reportes de estado de los Workers remotos por JWT.
+  # 2. AIRFLOW-APISERVER (El Nuevo Frontend y Backend de Airflow 3)
+  # Reemplaza al antiguo 'webserver'. Sirve la UI en React y la API REST.
   # ==============================================================================
   airflow-apiserver:
     <<: *airflow-common
-    container_name: airflow-apiserver
+    container_name: airflow-api-server
     command: api-server
     ports:
-      - "9091:9091"
+      - "8080:9091" # Exponemos en el 8080 para que el Nginx Proxy siga funcionando
     restart: always
     depends_on:
       airflow-init:
