@@ -66,7 +66,7 @@ services:
 
     # Podrás acceder poniendo en tu navegador: IP_PRIVADA_DB:8080 (o configurarlo en NPM)
     ports:
-      - "8080:8080"
+      - "8081:8081"
 
     # DEPENDENCIA
     # Le dice a Docker: "No intentes arrancar la interfaz web hasta que 
