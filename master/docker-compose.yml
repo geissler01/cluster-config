@@ -40,11 +40,11 @@ services:
     entrypoint: /bin/bash # ignora entrypoint de airflow por defecto temporalmente para crear las carpetas
     # abre una terminal bash
     user: "0:0" # Ejecuta como root temporalmente para crear carpetas
-    environment:
-      - _AIRFLOW_DB_MIGRATE=true # Gana y sobrescribe el "false" del .env
-      # si esto estuviera en false no se crearia la base de datos y no podria usar airflow
-      # porque airflow necesita una base de datos para almacenar los metadatos de los dags
-      # los usuarios, las conexiones, variables, etc.
+    # environment:
+    #   - _AIRFLOW_DB_MIGRATE=true # Gana y sobrescribe el "false" del .env
+    #   # si esto estuviera en false no se crearia la base de datos y no podria usar airflow
+    #   # porque airflow necesita una base de datos para almacenar los metadatos de los dags
+    #   # los usuarios, las conexiones, variables, etc.
     command:
       - -c
       - |
@@ -52,9 +52,8 @@ services:
         mkdir -p /opt/airflow/{logs,dags,plugins,config}
         # Les da propiedad al usuario 50000
         chown -R "${AIRFLOW_UID}:0" /opt/airflow
-        # IMPORTANTE: Al poner la migracion true en las variables de entorno, aqui no podemos usar airflow db migrate porque la primera le cerraria la puerta a la segunda y fallariamos.
-        # Por eso usamos airflow version para verificar que la migracion se hizo correctamente.
-        exec /entrypoint airflow version
+        # hacemos la migración a la nueva versión de airflow (AIRFLOW 3)
+        exec /entrypoint airflow db migrate
 
   # ==============================================================================
   # 2. AIRFLOW-APISERVER (El Nuevo Frontend y Backend de Airflow 3)
