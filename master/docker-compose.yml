@@ -52,10 +52,9 @@ services:
         mkdir -p /opt/airflow/{logs,dags,plugins,config}
         # Les da propiedad al usuario 50000
         chown -R "${AIRFLOW_UID}:0" /opt/airflow
-        # Comando mágico: Migra la base de datos a la versión 3.2.0
-        # Ahora si ejecuta el scrip de migracion de la base de datos a la version 3.2.0 de airflow
-        # y crea el usuario administrador con la contraseña que esta en el archivo .env
-        exec /entrypoint airflow db migrate
+        # IMPORTANTE: Al poner la migracion true en las variables de entorno, aqui no podemos usar airflow db migrate porque la primera le cerraria la puerta a la segunda y fallariamos.
+        # Por eso usamos airflow version para verificar que la migracion se hizo correctamente.
+        exec /entrypoint airflow version
 
   # ==============================================================================
   # 2. AIRFLOW-APISERVER (El Nuevo Frontend y Backend de Airflow 3)
