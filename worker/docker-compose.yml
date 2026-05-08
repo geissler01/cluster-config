@@ -73,7 +73,7 @@ services:
     #   Qué colas escucha este worker
     # ----------------------------------------------------------------------------
     command: >
-      airflow celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
+      celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
 
     # Reinicia automáticamente si falla
     restart: always
