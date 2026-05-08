@@ -48,25 +48,24 @@ services:
     command:
       - -c
       - |
-        set -e # si un comando falla, se detiene el script
+        set -e
+        # 1. Configurar solo directorios de ESCRITURA (Evita errores en dags/plugins que son RO)
+        echo "Configuring writable directories (logs, config)..."
+        mkdir -p /opt/airflow/{logs,config}
+        chown -R "${AIRFLOW_UID}:0" /opt/airflow/logs /opt/airflow/config
 
-        # Crea las carpetas físicamente si no existen
-        echo "Creating Airflow directories..."
-        mkdir -p /opt/airflow/{logs,dags,plugins,config}
+        # 2. Esperar a que la base de datos esté disponible
+        echo "Waiting for metadata DB at ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN}..."
+        until airflow db check; do
+          echo "Database not ready, retrying in 2s..."
+          sleep 2
+        done
 
-        # Les da propiedad al usuario 50000
-        echo "Configuring permissions..."
-        chown -R "${AIRFLOW_UID}:0" /opt/airflow
-
-        # hacemos la migración a la nueva versión de airflow (AIRFLOW 3)
+        # 3. Ejecutar migraciones de Airflow 3
         echo "Running database migrations..."
-        # No usamos exec para que el sleep funcione 
-        /entrypoint airflow db migrate 
+        airflow db migrate
 
-        echo "Waiting for database to stabilize..."
-        sleep 10
-
-        echo "Migration completed."
+        echo "Initialization completed successfully."
 
   # ==============================================================================
   # 2. AIRFLOW-APISERVER (El Nuevo Frontend y Backend de Airflow 3)
