@@ -73,7 +73,7 @@ services:
     #   Qué colas escucha este worker
     # ----------------------------------------------------------------------------
     command: >
-      celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
+      airflow celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
 
     # Reinicia automáticamente si falla
     restart: always
@@ -83,8 +83,8 @@ services:
       # Evita problemas señales Linux/PID1
       DUMB_INIT_SETSID: "0"
 
-      # Python path extra
-      PYTHONPATH: /opt/airflow/dags
+      # PYTHONPATH ya se gestiona internamente
+      # PYTHONPATH: /opt/airflow/dags
 
     # ----------------------------------------------------------------------------
     # Healthcheck
