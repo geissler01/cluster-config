@@ -18,8 +18,8 @@ x-airflow-common: &airflow-common
     # Como el .env estará en la raíz (recomendado) o en master, ajusta esta ruta. 
     # Aquí asumimos que el .env lo pusiste junto a este docker-compose.
     - .env
-  environment:
-    - PYTHONPATH=${PYTHONPATH} # para que python encuentre los paquetes de airflow al usar commands
+  # environment:
+  #   - PYTHONPATH=${PYTHONPATH}
   # Usa el usuario 50000 del sistema
   user: "${AIRFLOW_UID:-50000}:0"
   volumes:
@@ -39,35 +39,16 @@ services:
   airflow-init:
     <<: *airflow-common
     container_name: airflow-init
-    entrypoint: /bin/bash # ignora entrypoint de airflow por defecto temporalmente para crear las carpetas
-    # abre una terminal bash
-    user: "0:0" # Ejecuta como root temporalmente para crear carpetas
-    # environment:
-    #   - _AIRFLOW_DB_MIGRATE=true # Gana y sobrescribe el "false" del .env
-    #   # si esto estuviera en false no se crearia la base de datos y no podria usar airflow
-    #   # porque airflow necesita una base de datos para almacenar los metadatos de los dags
-    #   # los usuarios, las conexiones, variables, etc.
-    command:
-      - -c
-      - |
-        set -e
-        # 1. Configurar solo directorios de ESCRITURA (Evita errores en dags/plugins que son RO)
-        echo "Configuring writable directories (logs, config)..."
-        mkdir -p /opt/airflow/{logs,config}
-        chown -R "${AIRFLOW_UID}:0" /opt/airflow/logs /opt/airflow/config
-
-        # 2. Esperar a que la base de datos esté disponible
-        echo "Waiting for metadata DB at ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN}..."
+    # Al correr como root (0:0), el entrypoint oficial arreglará permisos automáticamente
+    user: "0:0"
+    command: >
+      bash -c "
         until airflow db check; do
-          echo "Database not ready, retrying in 2s..."
+          echo 'Waiting for metadata DB...'
           sleep 2
         done
-
-        # 3. Ejecutar migraciones de Airflow 3
-        echo "Running database migrations..."
         airflow db migrate
-
-        echo "Initialization completed successfully."
+      "
 
   # ==============================================================================
   # 2. AIRFLOW-APISERVER (El Nuevo Frontend y Backend de Airflow 3)
