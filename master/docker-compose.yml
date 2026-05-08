@@ -1,4 +1,6 @@
-version: '3.8'
+# ==============================================================================
+# CLÚSTER MASTER - AIRFLOW 3.2.0
+# ==============================================================================
 
 # ==============================================================================
 # X-AIRFLOW-COMMON: ANCLA YAML (Plantilla Base)
@@ -17,17 +19,17 @@ x-airflow-common: &airflow-common
     # Aquí asumimos que el .env lo pusiste junto a este docker-compose.
     - .env
   environment:
-    - PYTHONPATH=${PYTHONPATH}
+    - PYTHONPATH=${PYTHONPATH} # para que python encuentre los paquetes de airflow al usar commands
   # Usa el usuario 50000 del sistema
   user: "${AIRFLOW_UID:-50000}:0"
   volumes:
     # Ruta ABSOLUTA de tu EC2 : Ruta interna del contenedor
     # MAPEO DE VOLÚMENES: Izquierda es la máquina Host (EC2), Derecha es el contenedor interno.
     # Ruta EC2 : Ruta Contenedor : Permiso (ro = read-only)
-    - /opt/dags-alzheimer/dags:/opt/airflow/dags:ro
-    - ./logs:/opt/airflow/logs
-    - ./config:/opt/airflow/config
-    - /opt/dags-alzheimer/plugins:/opt/airflow/plugins:ro
+    - /opt/dags-alzheimer/dags:/opt/airflow/dags:ro # para encontrar los dags
+    - ./logs:/opt/airflow/logs # al dag_processor mete los dags por esta ruta
+    - ./config:/opt/airflow/config # para guardar la configuración
+    - /opt/dags-alzheimer/plugins:/opt/airflow/plugins:ro # para encontrar los plugins
 
 services:
   # ==============================================================================
