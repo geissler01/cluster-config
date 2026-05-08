@@ -74,7 +74,7 @@ services:
     # ----------------------------------------------------------------------------
     command: > # Si usamos la terminal debemos especificar el comando airflow
       bash -c "
-        airflow celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
+        airflow celery worker --autoscale=4,1 --queues=${QUEUES}
       "
 
     # Reinicia automáticamente si falla
