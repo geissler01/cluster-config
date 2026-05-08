@@ -72,8 +72,10 @@ services:
     # --queues
     #   Qué colas escucha este worker
     # ----------------------------------------------------------------------------
-    command: >
-      celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
+    command: > # Si usamos la terminal debemos especificar el comando airflow
+      bash -c "
+        airflow celery worker --autoscale=4,1 --hostname=${CELERY_HOSTNAME} --queues=${QUEUES}
+      "
 
     # Reinicia automáticamente si falla
     restart: always
@@ -82,16 +84,15 @@ services:
 
       # Evita problemas señales Linux/PID1
       DUMB_INIT_SETSID: "0"
-
       # PYTHONPATH ya se gestiona internamente
       # PYTHONPATH: /opt/airflow/dags
 
-    # ----------------------------------------------------------------------------
-    # Healthcheck
-    #
-    # Docker verifica periódicamente si el worker está vivo y respondiendo.
-    # Si falla el chequeo 5 veces consecutivas, Docker reinicia el contenedor.
-    # ----------------------------------------------------------------------------
+      # ----------------------------------------------------------------------------
+      # Healthcheck
+      #
+      # Docker verifica periódicamente si el worker está vivo y respondiendo.
+      # Si falla el chequeo 5 veces consecutivas, Docker reinicia el contenedor.
+      # ----------------------------------------------------------------------------
     healthcheck:
       test: [ "CMD-SHELL", "celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d celery@$$HOSTNAME" ]
       interval: 30s
