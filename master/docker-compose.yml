@@ -57,8 +57,7 @@ services:
   airflow-apiserver:
     <<: *airflow-common
     container_name: airflow-api-server
-    command: |
-      # espera hasta que la base de datos esté disponible y luego inicia el servidor
+    command: >
       bash -c "
         until airflow db check; do
           echo 'Waiting for metadata DB...'
@@ -150,7 +149,7 @@ services:
           sleep 2
         done
 
-        exec celery flower
+        exec airflow celery flower
       "
     ports:
       - "5555:5555" # Apuntaremos el subdominio orion-flower a este puerto
