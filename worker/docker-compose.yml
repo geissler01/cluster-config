@@ -21,8 +21,8 @@ x-airflow-common:
   env_file:
     - .env
 
-  # Usuario oficial airflow
-  user: "${AIRFLOW_UID:-50000}:0"
+  # Corremos como root para que el entrypoint pueda corregir permisos de volúmenes (logs/config)
+  user: "0:0"
 
   # Volúmenes montados
   volumes:
