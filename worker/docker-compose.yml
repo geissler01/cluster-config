@@ -40,6 +40,9 @@ x-airflow-common:
     # Configuración local Airflow
     - ./config:/opt/airflow/config
 
+    # volumen para entorno virtual
+    - /opt/dags-alzheimer/.venv:/opt/airflow/.venv:ro
+
 services:
 
   # ==============================================================================

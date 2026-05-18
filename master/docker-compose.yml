@@ -30,6 +30,8 @@ x-airflow-common: &airflow-common
     - ./logs:/opt/airflow/logs # al dag_processor mete los dags por esta ruta
     - ./config:/opt/airflow/config # para guardar la configuración
     - /opt/dags-alzheimer/plugins:/opt/airflow/plugins:ro # para encontrar los plugins
+    # volumen para entorno virtual
+    - /opt/dags-alzheimer/.venv:/opt/airflow/.venv:ro
 
 services:
   # ==============================================================================
